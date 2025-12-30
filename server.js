@@ -4,7 +4,6 @@ const schedule = require('node-schedule');
 const fs = require('fs');
 
 /**
- * වැදගත්: 
  * 1. මෙතන '94XXXXXXXXX' වෙනුවට ඔයාගේ WhatsApp අංකය 94 සහිතව ඇතුළත් කරන්න. 
  */
 const MY_NUMBER = '94782932976'; 
@@ -15,6 +14,8 @@ const client = new Client({
     }),
     puppeteer: {
         headless: true,
+        // අලුත් Chrome for Testing Buildpack එක සඳහා නිවැරදි Path එක
+        executablePath: '/app/.chrome-for-testing/chrome-linux64/chrome',
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -30,21 +31,25 @@ const client = new Client({
 
 // Pairing Code එක ලබා ගැනීම
 client.on('qr', async (qr) => {
+    // අවශ්‍ය වුණොත් Logs වල QR එකත් පෙන්වයි
     qrcode.generate(qr, {small: true});
+    
     try {
         console.log('Pairing Code එක ලබා ගනිමින් පවතියි...');
         const pairingCode = await client.getPairingCode(MY_NUMBER);
         console.log('------------------------------------------');
         console.log('ඔබේ Pairing Code එක: ', pairingCode);
         console.log('------------------------------------------');
+        console.log('WhatsApp -> Linked Devices -> Link with phone number පේජ් එකට ගොස් මෙම Code එක ඇතුළත් කරන්න.');
     } catch (err) {
-        console.error('Pairing Code error:', err);
+        console.error('Pairing Code ලබා ගැනීමේ දෝෂයක්. කරුණාකර QR එක Scan කරන්න.', err);
     }
 });
 
 client.on('ready', () => {
     console.log('WhatsApp සම්බන්ධ විය! රෑ 12:00 ට පණිවිඩ යැවීමට සූදානම්...');
 
+    // ලංකාවේ වෙලාවෙන් 2026 ජනවාරි 1 වනදා 00:00:00
     schedule.scheduleJob('0 0 0 1 0 *', async function(){ 
         console.log('සුබ අලුත් අවුරුද්දක්! පණිවිඩ යැවීම ආරම්භ කළා...');
 
@@ -66,24 +71,22 @@ client.on('ready', () => {
                 for (let num of numbers) {
                     let chatId = num.trim() + "@c.us";
                     try {
-                        // ෆොටෝ එක සහ කැප්ෂන් එක යැවීම
                         await client.sendMessage(chatId, photo, { caption: caption });
-                        
-                        // ඕඩියෝ එක VOICE NOTE එකක් විදිහට යැවීම (sendAudioAsVoice: true)
+                        // Voice Note එකක් ලෙස යැවීම
                         await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
                         
-                        console.log(`${num} අංකයට පණිවිඩය සහ Voice Note එක යැව්වා.`);
+                        console.log(`${num} අංකයට පණිවිඩය යැව්වා.`);
                         await new Promise(resolve => setTimeout(resolve, 3000));
                     } catch (e) {
-                        console.log(`${num} error:`, e.message);
+                        console.log(`${num} යැවීමේදී දෝෂයක්:`, e.message);
                     }
                 }
             }
-            console.log('සියලුම වැඩ අවසන්!');
+            console.log('සියලුම වැඩ සාර්ථකව අවසන්!');
         } catch (error) {
-            console.error('Error:', error);
+            console.error('පණිවිඩ යැවීමේදී දෝෂයක්:', error);
         }
     });
 });
 
-client.initialize();
+client.initialize().catch(err => console.error('Initialization error:', err));
