@@ -1,12 +1,12 @@
 {
   "name": "wish-2026",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "engines": {
     "node": "20.x"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "whatsapp-web.js": "^1.23.0",
