@@ -1,7 +1,7 @@
 {
-  "name": "new-year-bot-2026",
+  "name": "wish-2026",
   "version": "1.0.0",
-  "description": "WhatsApp Status and Message Bot",
+  "description": "WhatsApp Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -9,7 +9,7 @@
   "dependencies": {
     "whatsapp-web.js": "^1.23.0",
     "qrcode-terminal": "^0.12.0",
-    "puppeteer": "^21.0.0",
+    "puppeteer": "latest",
     "node-schedule": "^2.1.1"
   }
 }
