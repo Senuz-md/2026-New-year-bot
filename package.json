@@ -1,13 +1,13 @@
 {
   "name": "whatsapp-bot",
   "version": "1.0.0",
-  "description": "WhatsApp Bot with Pairing Code",
+  "description": "WhatsApp Bot",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#webpack-exodus",
+    "whatsapp-web.js": "1.26.1-alpha.3",
     "qrcode-terminal": "^0.12.0",
     "node-schedule": "^2.1.1"
   },
