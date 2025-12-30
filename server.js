@@ -32,22 +32,31 @@ const client = new Client({
 client.on('qr', async (qr) => {
     qrcode.generate(qr, {small: true});
     
+    // මචං ලොග් එකේ මේ පේළිය පේනවා නම් විතරක් කෝඩ් එක ගනින්
+    console.log('--- PAIRING CODE GENERATING... ---');
+    
     try {
-        console.log('Pairing Code එක ලබා ගනිමින් පවතියි...');
-        const pairingCode = await client.getPairingCode(MY_NUMBER);
-        console.log('------------------------------------------');
-        console.log('✅ ඔබේ Pairing Code එක: ', pairingCode);
-        console.log('------------------------------------------');
+        // සමහර වෙලාවට Library එක Load වෙන්න තත්පර කිහිපයක් යනවා
+        setTimeout(async () => {
+            try {
+                const pairingCode = await client.getPairingCode(MY_NUMBER);
+                console.log('******************************************');
+                console.log('✅ YOUR CODE: ' + pairingCode);
+                console.log('******************************************');
+            } catch (e) {
+                console.log('Pairing Code එක ගන්න බැරි වුණා, QR එක Scan කරන්න.');
+            }
+        }, 5000);
     } catch (err) {
-        console.error('Pairing Code error:', err);
+        console.error('QR Error:', err);
     }
 });
 
 client.on('ready', () => {
-    console.log('✅ WhatsApp සම්බන්ධ විය! ජනවාරි 1 දාට පණිවිඩ යැවීමට සූදානම්...');
+    console.log('✅ WhatsApp සම්බන්ධ විය! රෑ 12:00 ට පණිවිඩ යැවීමට සූදානම්...');
 
     // ලංකාවේ වෙලාවෙන් 2026 ජනවාරි 1 වනදා 00:00:00
-    // (සටහන: මාසය 0 යනු ජනවාරි වේ)
+    // (මාසය 0 = ජනවාරි)
     schedule.scheduleJob('0 0 0 1 0 *', async function(){ 
         console.log('🚀 සුබ අලුත් අවුරුද්දක්! පණිවිඩ යැවීම ආරම්භ කළා...');
 
@@ -68,15 +77,18 @@ client.on('ready', () => {
                 const numbers = data.split(/\r?\n/).filter(line => line.trim() !== "");
 
                 for (let num of numbers) {
-                    let chatId = num.trim().replace('+', '') + "@c.us";
+                    // අංකයේ + ලකුණ තිබේ නම් ඉවත් කර chatId සාදා ගැනීම
+                    let cleanNum = num.trim().replace('+', '').replace(/\s/g, '');
+                    let chatId = cleanNum + "@c.us";
+                    
                     try {
                         // පින්තූරය සහ Caption එක යැවීම
                         await client.sendMessage(chatId, photo, { caption: captionText });
 
-                        // 🔴 වැදගත්ම කොටස: Voice Note එකක් (PTT) ලෙස යැවීම
+                        // 🔴 Voice Note එකක් (PTT) ලෙස යැවීම
                         await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
                         
-                        console.log(`📩 ${num} අංකයට පණිවිඩ සහ Voice Note යැව්වා.`);
+                        console.log(`📩 ${cleanNum} අංකයට සාර්ථකව යැවුවා.`);
                         
                         // WhatsApp Block නොවීමට තත්පර 3 ක Delay එකක්
                         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -85,11 +97,11 @@ client.on('ready', () => {
                     }
                 }
             }
-            console.log('✨ සියලුම වැඩ සාර්ථකව අවසන්!');
+            console.log('✨ වැඩේ ඉවරයි!');
         } catch (error) {
             console.error('CRITICAL ERROR:', error);
         }
     });
 });
 
-client.initialize().catch(err => console.error('Initialization error:', err));
+client.initialize().catch(err => console.error('Init error:', err));
