@@ -1,17 +1,18 @@
 {
-  "name": "wish-2026",
+  "name": "whatsapp-new-year-bot",
   "version": "1.0.0",
+  "description": "WhatsApp New Year Greeting Bot for Heroku",
   "main": "server.js",
-  "engines": {
-    "node": "20.x"
-  },
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "whatsapp-web.js": "^1.23.0",
+    "whatsapp-web.js": "^1.26.0",
     "qrcode-terminal": "^0.12.0",
-    "puppeteer": "latest",
-    "node-schedule": "^2.1.1"
+    "node-schedule": "^2.1.1",
+    "puppeteer": "^21.0.0"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
