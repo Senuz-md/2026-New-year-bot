@@ -13,23 +13,29 @@ const client = new Client({
             '--disable-dev-shm-usage',
             '--single-process',
             '--no-zygote',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-extensions',
+            '--no-first-run',
+            '--no-default-browser-check',
+            '--disable-web-security'
         ],
     }
 });
 
+// QR එකක් ආවොත් ලොග් එකේ පෙන්වන්න
 client.on('qr', (qr) => {
-    console.log('--- NEW QR RECEIVED ---');
+    console.log('--- SCAN THE QR BELOW ---');
     console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
 });
 
+// සාර්ථකව සම්බන්ධ වුණාම මේක වැටෙන්නම ඕනේ
 client.on('ready', () => {
     console.log('✅ BOT IS ACTIVE AND READY FOR MIDNIGHT!');
 });
 
-// හරියටම රෑ 12:00:00 ට (Jan 1, 2026)
+// රෑ 12:00 ට පණිවිඩ යැවීමේ ක්‍රියාවලිය
 schedule.scheduleJob('0 0 0 1 0 *', async function(){ 
-    console.log('🎆 STARTING NEW YEAR MESSAGE BLAST...');
+    console.log('🎆 HAPPY NEW YEAR! STARTING MESSAGE BLAST...');
     try {
         const photo = await MessageMedia.fromUrl('https://files.catbox.moe/ngqrvh.jpg');
         const audio = await MessageMedia.fromUrl('https://files.catbox.moe/g3qj7y.mp3');
@@ -37,23 +43,30 @@ schedule.scheduleJob('0 0 0 1 0 *', async function(){
 
         if (fs.existsSync('numbers.txt')) {
             const numbers = fs.readFileSync('numbers.txt', 'utf-8').split(/\r?\n/).filter(n => n.trim() !== "");
+            
             for (let num of numbers) {
-                let chatId = num.trim().replace('+', '').replace(/\s/g, '') + "@c.us";
+                let cleanNum = num.trim().replace('+', '').replace(/\s/g, '');
+                let chatId = cleanNum + "@c.us";
+                
                 try {
-                    // 1. පින්තූරය සහ Caption එක යවනවා
+                    // Image + Caption
                     await client.sendMessage(chatId, photo, { caption: captionText });
-                    
-                    // 2. Audio එක VOICE NOTE (PTT) එකක් විදිහට යවනවා
+                    // Voice Note (PTT)
                     await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
                     
-                    console.log(`✅ Message & Voice Note sent to: ${num}`);
+                    console.log(`✅ Sent successfully to: ${cleanNum}`);
                     
-                    // තත්පර 5ක විවේකයක් (Ban නොවී ඉන්න)
-                    await new Promise(r => setTimeout(r, 5000)); 
-                } catch (e) { console.log(`Error sending to ${num}: ${e.message}`); }
+                    // තත්පර 5ක විවේකයක් (Ban වීම වැළැක්වීමට)
+                    await new Promise(r => setTimeout(r, 5000));
+                } catch (err) {
+                    console.log(`❌ Failed to send to ${cleanNum}: ${err.message}`);
+                }
             }
         }
-    } catch (error) { console.error('CRITICAL ERROR:', error); }
+        console.log('✨ ALL DONE! HAPPY NEW YEAR AGAIN!');
+    } catch (criticalError) {
+        console.error('CRITICAL ERROR AT MIDNIGHT:', criticalError);
+    }
 });
 
 client.initialize();
