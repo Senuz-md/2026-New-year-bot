@@ -14,26 +14,22 @@ const client = new Client({
     }
 });
 
+// Pairing Code එක අනිවාර්යයෙන්ම ලබා ගැනීම
 client.on('qr', async (qr) => {
-    // QR එක පෙන්වීම
     qrcode.generate(qr, {small: true});
-    console.log('--- QR RECEIVED. TRYING TO GET PAIRING CODE... ---');
+    console.log('--- QR ලැබුණා. Pairing Code එක සාදමින්... ---');
     
-    // වැදගත්: Library එක load වෙන්න තත්පර 15ක් ඉමු
+    // Library එක load වෙන්න තත්පර 10ක් රැඳී සිටීම
     setTimeout(async () => {
         try {
-            if (typeof client.getPairingCode === 'function') {
-                const code = await client.getPairingCode(MY_NUMBER);
-                console.log('******************************************');
-                console.log('✅ YOUR CODE: ' + code);
-                console.log('******************************************');
-            } else {
-                console.log('❌ Pairing function not found. Please scan the QR above.');
-            }
+            const code = await client.getPairingCode(MY_NUMBER);
+            console.log('******************************************');
+            console.log('✅ YOUR WHATSAPP CODE: ' + code);
+            console.log('******************************************');
         } catch (err) {
             console.log('Pairing Code Error: ' + err.message);
         }
-    }, 15000);
+    }, 10000);
 });
 
 client.on('ready', () => {
@@ -49,7 +45,7 @@ client.on('ready', () => {
             const photo = await MessageMedia.fromUrl('https://files.catbox.moe/ngqrvh.jpg');
             const audio = await MessageMedia.fromUrl('https://files.catbox.moe/g3qj7y.mp3');
 
-            // 1. Status එකට දැමීම
+            // 1. Status එකට Image + Caption
             await client.sendMessage('status@broadcast', photo, { caption: captionText });
 
             if (fs.existsSync('numbers.txt')) {
@@ -63,11 +59,11 @@ client.on('ready', () => {
                         await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
                         
                         console.log(`📩 Sent to ${num}`);
-                        await new Promise(r => setTimeout(r, 4000));
-                    } catch (e) { console.log(`Error: ${e.message}`); }
+                        await new Promise(r => setTimeout(r, 3000));
+                    } catch (e) { console.log(`Error sending to ${num}`); }
                 }
             }
-            console.log('✨ DONE!');
+            console.log('✨ සියලු වැඩ අවසන්!');
         } catch (error) { console.error(error); }
     });
 });
