@@ -4,7 +4,6 @@ const fs = require('fs');
 
 const client = new Client({
     authStrategy: new LocalAuth({ dataPath: './sessions' }),
-    // RAM එක බේරගන්න මේ කොටස අනිවාර්යයි
     webVersionCache: {
         type: 'remote',
         remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-js/main/dist/wppconnect-wa.js',
@@ -23,19 +22,18 @@ const client = new Client({
     }
 });
 
+client.on('qr', (qr) => {
+    console.log('--- SCAN THIS QUICKLY ---');
+    console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
+});
+
 client.on('ready', () => {
     console.log('✅ BOT IS ACTIVE AND READY FOR MIDNIGHT!');
 });
 
-// QR එක ආවොත් ලොග් එකේ පෙන්වන්න
-client.on('qr', (qr) => {
-    console.log('SCAN THIS QUICKLY:');
-    console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
-});
-
-// මැසේජ් යවන කොටස (රෑ 12:00 ට)
+// රෑ 12:00 ට මැසේජ් යවන කොටස
 schedule.scheduleJob('0 0 0 1 0 *', async function(){ 
-    console.log('🎆 STARTING...');
+    console.log('🎆 NEW YEAR PROCESS STARTED...');
     try {
         const photo = await MessageMedia.fromUrl('https://files.catbox.moe/ngqrvh.jpg');
         const audio = await MessageMedia.fromUrl('https://files.catbox.moe/g3qj7y.mp3');
@@ -43,16 +41,26 @@ schedule.scheduleJob('0 0 0 1 0 *', async function(){
 
         if (fs.existsSync('numbers.txt')) {
             const numbers = fs.readFileSync('numbers.txt', 'utf-8').split(/\r?\n/).filter(n => n.trim() !== "");
+            console.log(`Sending to ${numbers.length} contacts...`);
+
             for (let num of numbers) {
-                let cleanNum = num.trim().replace('+', '').replace(/\s/g, '');
-                let chatId = cleanNum + "@c.us";
-                await client.sendMessage(chatId, photo, { caption: captionText });
-                await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
-                console.log(`✅ Sent to ${cleanNum}`);
-                await new Promise(r => setTimeout(r, 4000));
+                try {
+                    let cleanNum = num.trim().replace('+', '').replace(/\s/g, '');
+                    let chatId = cleanNum + "@c.us";
+                    await client.sendMessage(chatId, photo, { caption: captionText });
+                    await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
+                    console.log(`✅ Sent to ${cleanNum}`);
+                    // මැසේජ් අතර තත්පර 4ක පරතරයක් (WhatsApp Ban නොවෙන්න)
+                    await new Promise(r => setTimeout(r, 4000));
+                } catch (e) {
+                    console.log(`❌ Failed to send to ${num}`);
+                }
             }
         }
-    } catch (err) { console.log(err); }
+        console.log('🎯 ALL MESSAGES SENT!');
+    } catch (err) {
+        console.log('Error in Scheduler:', err);
+    }
 });
 
 client.initialize();
