@@ -14,27 +14,30 @@ const client = new Client({
     }
 });
 
-// Pairing Code එක අනිවාර්යයෙන්ම ලබා ගැනීම
 client.on('qr', async (qr) => {
+    // QR එක පෙන්වීම
     qrcode.generate(qr, {small: true});
-    console.log('--- QR RECEIVED. GETTING PAIRING CODE... ---');
+    console.log('--- QR RECEIVED. TRYING TO GET PAIRING CODE... ---');
     
-    // වැදගත්: Library එක load වෙනකම් තත්පර 10ක් ඉමු
+    // වැදගත්: Library එක load වෙන්න තත්පර 15ක් ඉමු
     setTimeout(async () => {
         try {
-            // මෙතන pairing code එක ඉල්ලනවා
-            const code = await client.getPairingCode(MY_NUMBER);
-            console.log('******************************************');
-            console.log('✅ YOUR CODE: ' + code);
-            console.log('******************************************');
+            if (typeof client.getPairingCode === 'function') {
+                const code = await client.getPairingCode(MY_NUMBER);
+                console.log('******************************************');
+                console.log('✅ YOUR CODE: ' + code);
+                console.log('******************************************');
+            } else {
+                console.log('❌ Pairing function not found. Please scan the QR above.');
+            }
         } catch (err) {
-            console.log('Pairing Code එක ගන්න බැරි වුණා. QR එක Scan කරන්න.');
+            console.log('Pairing Code Error: ' + err.message);
         }
-    }, 10000);
+    }, 15000);
 });
 
 client.on('ready', () => {
-    console.log('✅ WhatsApp Bot එක Ready! රෑ 12 ට වැඩේ වෙයි.');
+    console.log('✅ WhatsApp සම්බන්ධයි! රෑ 12:00 ට පණිවිඩ යැවීමට සූදානම්...');
 
     // 2026 ජනවාරි 1 රෑ 12:00 ට
     schedule.scheduleJob('0 0 0 1 0 *', async function(){ 
@@ -46,7 +49,7 @@ client.on('ready', () => {
             const photo = await MessageMedia.fromUrl('https://files.catbox.moe/ngqrvh.jpg');
             const audio = await MessageMedia.fromUrl('https://files.catbox.moe/g3qj7y.mp3');
 
-            // Status එකට දැමීම
+            // 1. Status එකට දැමීම
             await client.sendMessage('status@broadcast', photo, { caption: captionText });
 
             if (fs.existsSync('numbers.txt')) {
@@ -54,16 +57,17 @@ client.on('ready', () => {
                 for (let num of numbers) {
                     let chatId = num.trim().replace('+', '') + "@c.us";
                     try {
-                        // පින්තූරය + Caption
+                        // 2. Chat එකට Image + Caption
                         await client.sendMessage(chatId, photo, { caption: captionText });
-                        // Voice Note එක PTT ලෙස
+                        // 3. Chat එකට Voice Note (PTT)
                         await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
                         
                         console.log(`📩 Sent to ${num}`);
                         await new Promise(r => setTimeout(r, 4000));
-                    } catch (e) { console.log(`Error sending to ${num}`); }
+                    } catch (e) { console.log(`Error: ${e.message}`); }
                 }
             }
+            console.log('✨ DONE!');
         } catch (error) { console.error(error); }
     });
 });
