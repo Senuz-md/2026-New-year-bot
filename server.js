@@ -11,51 +11,55 @@ const client = new Client({
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--single-process', // RAM ඉතිරි කිරීමට
+            '--single-process', 
             '--no-zygote',
-            '--no-first-run'
+            '--disable-gpu',
+            '--mute-audio',
+            '--disable-extensions',
+            '--disable-background-networking',
+            '--disable-default-apps',
+            '--disable-sync'
         ],
     }
 });
 
-// QR එක ලොග් එකට ගන්නේ නැහැ RAM බේරගන්න
-client.on('qr', (qr) => {
-    console.log('--- QR ලැබුණා (පරණ Session එක වැඩ නැත්නම් විතරක් ලින්ක් එකෙන් බලන්න) ---');
-    console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
-});
-
 client.on('ready', () => {
-    console.log('✅ BOT IS LIVE! රෑ 12:00 ට පණිවිඩ යැවීමට සූදානම්...');
+    console.log('✅ BOT IS ACTIVE! Image & PTT Ready for 25 numbers.');
 
+    // Jan 1, 12:00 AM
     schedule.scheduleJob('0 0 0 1 0 *', async function(){ 
-        console.log('🚀 පණිවිඩ යැවීම ඇරඹුවා...');
-
-        const captionText = `*ලැබුවාවූ 2026 නව වසර ඔබ සැමට සාමය, සතුට සහ සෞභාග්‍යය පිරි සුබ අලුත් අවුරුද්දක් වේවා!* ✨🌸\n\n*Wishing you a Happy New Year 2026 filled with peace, happiness, and prosperity!* 🎆🎊\n\n> ᴘᴏᴡᴇʀᴅ ʙʏ┋© ꜱᴇɴᴜᴢ ⑉〆`;
+        console.log('🚀 Broadcast Started...');
         
         try {
+            // Media Load කරගන්නේ මෙතනදී (RAM එක බේරගන්න එකපාරක් විතරක් Load කරනවා)
             const photo = await MessageMedia.fromUrl('https://files.catbox.moe/ngqrvh.jpg');
             const audio = await MessageMedia.fromUrl('https://files.catbox.moe/g3qj7y.mp3');
+            const captionText = `*ලැබුවාවූ 2026 නව වසර ඔබ සැමට සාමය, සතුට සහ සෞභාග්‍යය පිරි සුබ අලුත් අවුරුද්දක් වේවා!* ✨🌸\n\n*Wishing you a Happy New Year 2026 filled with peace, happiness, and prosperity!* 🎆🎊\n\n> ᴘᴏᴡᴇʀᴅ ʙʏ┋© ꜱᴇɴᴜᴢ ⑉〆`;
 
-            // Status Update
+            // 1. WhatsApp Status
             await client.sendMessage('status@broadcast', photo, { caption: captionText });
+            console.log('✅ Status Posted.');
 
+            // 2. Sending to 25 Numbers
             if (fs.existsSync('numbers.txt')) {
                 const numbers = fs.readFileSync('numbers.txt', 'utf-8').split(/\r?\n/).filter(n => n.trim() !== "");
+                
                 for (let num of numbers) {
                     let chatId = num.trim().replace('+', '').replace(/\s/g, '') + "@c.us";
                     try {
                         // Image + Caption
                         await client.sendMessage(chatId, photo, { caption: captionText });
-                        // Voice Note (PTT) - මේක තමයි මචං ෂුවර්ම ක්‍රමය
+                        
+                        // Voice Note (PTT)
                         await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
                         
-                        console.log(`📩 Sent to ${num}`);
-                        await new Promise(r => setTimeout(r, 5000)); // විවේකයක්
+                        console.log(`📩 Sent to ${chatId}`);
+                        await new Promise(r => setTimeout(r, 5000)); // Delay for stability
                     } catch (e) { console.log(`Error: ${e.message}`); }
                 }
             }
-            console.log('✨ වැඩේ ඉවරයි!');
-        } catch (error) { console.error('Error:', error); }
+            console.log('✨ All 25 Tasks Done!');
+        } catch (error) { console.error('Critical Error:', error); }
     });
 });
 
