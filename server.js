@@ -4,25 +4,38 @@ const fs = require('fs');
 
 const client = new Client({
     authStrategy: new LocalAuth({ dataPath: './sessions' }),
+    // RAM එක බේරගන්න මේ කොටස අනිවාර්යයි
+    webVersionCache: {
+        type: 'remote',
+        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-js/main/dist/wppconnect-wa.js',
+    },
     puppeteer: {
         headless: true,
         executablePath: '/app/.chrome-for-testing/chrome-linux64/chrome',
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process', '--no-zygote', '--disable-gpu']
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--no-zygote',
+            '--single-process'
+        ],
     }
-});
-
-client.on('qr', (qr) => {
-    console.log('--- SCAN THE QR QUICKLY ---');
-    console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
 });
 
 client.on('ready', () => {
     console.log('✅ BOT IS ACTIVE AND READY FOR MIDNIGHT!');
 });
 
-// 2026 ජනවාරි 1 රෑ 12:00 ට පණිවිඩ යැවීම
+// QR එක ආවොත් ලොග් එකේ පෙන්වන්න
+client.on('qr', (qr) => {
+    console.log('SCAN THIS QUICKLY:');
+    console.log(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`);
+});
+
+// මැසේජ් යවන කොටස (රෑ 12:00 ට)
 schedule.scheduleJob('0 0 0 1 0 *', async function(){ 
-    console.log('🚀 Sending Wishes Now...');
+    console.log('🎆 STARTING...');
     try {
         const photo = await MessageMedia.fromUrl('https://files.catbox.moe/ngqrvh.jpg');
         const audio = await MessageMedia.fromUrl('https://files.catbox.moe/g3qj7y.mp3');
@@ -31,16 +44,15 @@ schedule.scheduleJob('0 0 0 1 0 *', async function(){
         if (fs.existsSync('numbers.txt')) {
             const numbers = fs.readFileSync('numbers.txt', 'utf-8').split(/\r?\n/).filter(n => n.trim() !== "");
             for (let num of numbers) {
-                let chatId = num.trim().replace('+', '').replace(/\s/g, '') + "@c.us";
-                // Image + Caption
+                let cleanNum = num.trim().replace('+', '').replace(/\s/g, '');
+                let chatId = cleanNum + "@c.us";
                 await client.sendMessage(chatId, photo, { caption: captionText });
-                // Voice Note (PTT)
                 await client.sendMessage(chatId, audio, { sendAudioAsVoice: true });
-                console.log(`✅ Sent to ${num}`);
-                await new Promise(r => setTimeout(r, 5000)); // තත්පර 5ක පරතරය
+                console.log(`✅ Sent to ${cleanNum}`);
+                await new Promise(r => setTimeout(r, 4000));
             }
         }
-    } catch (e) { console.error(e); }
+    } catch (err) { console.log(err); }
 });
 
 client.initialize();
